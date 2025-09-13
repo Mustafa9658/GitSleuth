@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - HOST=0.0.0.0
+      - PORT=8000
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - CHROMA_PERSIST_DIRECTORY=./chroma_db
+    volumes:
+      - backend_data:/app/chroma_db
+      - backend_temp:/app/temp_repos
+      - backend_cache:/app/cache
+      - backend_knowledge:/app/knowledge_cache
+      - backend_chat:/app/chat_history
+      - backend_advanced_cache:/app/advanced_cache_data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+  # Optional: Add nginx reverse proxy for production
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.backend.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - backend
+    restart: unless-stopped
+    profiles:
+      - with-nginx
+
+volumes:
+  backend_data:
+    driver: local
+  backend_temp:
+    driver: local
+  backend_cache:
+    driver: local
+  backend_knowledge:
+    driver: local
+  backend_chat:
+    driver: local
+  backend_advanced_cache:
+    driver: local
+
+networks:
+  default:
+    name: gitsleuth-backend-network

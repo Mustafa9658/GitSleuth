@@ -1,0 +1,14 @@
+# Minimal requirements for basic functionality
+fastapi
+uvicorn[standard]
+openai
+chromadb
+gitpython
+python-multipart
+aiofiles
+pydantic
+pydantic-settings
+python-dotenv
+httpx
+tiktoken
+scikit-learn
